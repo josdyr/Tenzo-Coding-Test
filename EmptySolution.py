@@ -3,12 +3,19 @@ Please write you name here: Jostein Dyrseth
 """
 import csv
 import datetime
-import re
+import sys
+
+
+class Shift(object):
+    """A shift per person with start and end times including breaks and pay rates"""
+
+    def __init__(self, start, end, break_start, break_end, rates):
+        super(Shift, self).__init__()
+        self.arg = arg
 
 
 def process_shifts(path_to_csv):
     """
-
     :param path_to_csv: The path to the work_shift.csv
     :type string:
     :return: A dictionary with time as key (string) with format %H:%M
@@ -22,66 +29,83 @@ def process_shifts(path_to_csv):
     50 pounds
     :rtype dict:
     """
-    hourly_rate = {hour: 1 for hour in range(24)} # initialise the dictionary
+    import ipdb; ipdb.set_trace(context=11)
 
-    with open(path_to_csv, newline='') as csvfile:
-        reader = csv.reader(csvfile, delimiter=',', quotechar='|')
-        next(reader) # skip header
+    def convert_to_24(time_value, type):
+        if time_value is not None:
+            if 'PM' in time_value.upper():
+                time_value = time_value.replace('PM', '') # remove PM
+                if type == 'hour':
+                    time_value = int(time_value) + 12 # convert to 24-hour format
+                else:
+                    time_value = int(time_value)
+            elif 'AM' in time_value.upper():
+                time_value = time_value.replace('AM', '') # remove AM
+                time_value = int(time_value)
+        else:
+            time_value = 0
+
+        return time_value
+
+    def get_start_end(string_time):
+        start_break, end_break = string_time.split("-")
+        return start_break, end_break
+
+    def get_hour_minute(break_time):
+        if ":" in break_time or "." in break_time:
+            try:
+                break_hour, break_minute = break_time.split(".")
+            except Exception as e:
+                print("Could not split on '.'", file=sys.stderr)
+            try:
+                break_hour, break_minute = break_time.split(":")
+            except Exception as e:
+                print("Could not split on ':'", file=sys.stderr)
+        else:
+            break_hour = break_time
+            break_minute = None
+
+        break_hour = convert_to_24(break_hour, 'hour')
+        break_minute = convert_to_24(break_minute, 'minute')
+
+        if int(break_hour) < 9: # Assuming day-shift starts at 9
+            # convert to 24-hour format
+            break_hour = int(break_hour) + 12
+
+        return int(break_hour), int(break_minute)
+
+    shift_hours = dict()
+
+    # for each row in file
+    with open(path_to_shifts, newline='') as csvfile:
+        reader = csv.reader(csvfile, delimiter=',')
+        reader.__next__() # skip header
         for row in reader:
-            start = int(row[3][0:2])
-            hourly_fraction = None # defaults to only whole hours
-            if row[1][3:5] != '00':
-                hourly_fraction = int(row[1][3:5]) / 60 # gets the additional fraction of the next hour
-            finish = int(row[1][0:2])
 
-            s_break_start, s_break_end = row[0].split("-")
-            print(s_break_start, s_break_end)
+            # work shift
+            start_shift, end_shift = row[1], row[3]
+
+            # break
+            start_break, end_break = get_start_end(row[0])
+            start_break_hour, start_break_minute = get_hour_minute(start_break)
+            end_break_hour, end_break_minute = get_hour_minute(end_break)
+
+            # pay rate
+            current_pay_rate = float(row[2])
+
             import ipdb; ipdb.set_trace(context=11)
 
-            break_fraction = None
-            if 'PM' in s_break_start:
-                s_break_start = s_break_start.replace('PM', '')
-                if '.' in s_break_start or ':' in s_break_start:
-                    s_break_start = s_break_start.replace('.', ':')
-                    minutes = s_break_start.split(":")[1]
-                    if minutes != '00':
-                        break_fraction = int(minutes) / 60
-                s_break_start = int(s_break_start.split(':')[0]) + 12
-            elif 'AM' in s_break_start:
-                s_break_start = s_break_start.replace('AM', '')
-                if '.' in s_break_start or ':' in s_break_start:
-                    s_break_start = s_break_start.replace('.', ':')
-                    minutes = s_break_start.split(":")[1]
-                    if minutes != '00':
-                        break_fraction = int(minutes) / 60
-                s_break_start = int(s_break_start.split(':')[0]) - 12
+            for hour in range(start_shift, end_shift):
 
-            if 'PM' in s_break_end:
-                s_break_end = s_break_end.replace('PM', '')
-                if '.' in s_break_end or ':' in s_break_end:
-                    s_break_end = s_break_end.replace('.', ':')
-                    minutes = s_break_end.split(":")[1]
-                    if minutes != '00':
-                        break_fraction = int(minutes) / 60
-                s_break_end = int(s_break_end.split(':')[0]) + 12
-            elif 'AM' in s_break_end:
-                s_break_end = s_break_end.replace('AM', '')
-                if '.' in s_break_end or ':' in s_break_end:
-                    s_break_end = s_break_end.replace('.', ':')
-                    minutes = s_break_end.split(":")[1]
-                    if minutes != '00':
-                        break_fraction = int(minutes) / 60
-                s_break_end = int(s_break_end.split(':')[0]) - 12
+                if int(start_shift[3:]) != '00':
+                    fraction_minute = int(start_shift[3:])
 
-            print(s_break_start, s_break_end)
-
-            for hour in range(start, finish):
-                total_rate = hourly_rate[hour]
-                hourly_rate.update({hour: total_rate + float(row[2])})
-                if hourly_fraction:
-                    hourly_rate.update({hour+1: total_rate + hourly_fraction})
-
-    return hourly_rate
+                # add values to dictionary
+                if hour in shift_hours: # get current value, if any
+                    total_pay_rate = shift_hours[hour]
+                else:
+                    total_pay_rate = 0
+                shift_hours.update({start_shift_hour : total_pay_rate + current_pay_rate})
 
 
 def process_sales(path_to_csv):
