@@ -51,6 +51,7 @@ def get_hour_minute(break_time):
 
     return int(break_hour), int(break_minute)
 
+
 def process_shifts(path_to_csv):
     """
     :param path_to_csv: The path to the work_shift.csv
@@ -67,7 +68,7 @@ def process_shifts(path_to_csv):
     :rtype dict:
     """
 
-    shift_hours = dict()
+    shifts = dict()
 
     # for each row in file
     with open(path_to_csv, newline='') as csvfile:
@@ -95,8 +96,9 @@ def process_shifts(path_to_csv):
 
             for hour in range(start_hour, end_hour+1 if end_minute != 0 else end_hour):
 
-                if hour in shift_hours:
-                    hourly_cost = shift_hours[hour] # get hourly_cost
+                str_hour = str(hour) + ':00' if hour > 9 else '0' + str(hour) + ':00'
+                if str_hour in shifts:
+                    hourly_cost = shifts[str_hour] # get hourly_cost
                 else:
                     hourly_cost = 0
 
@@ -104,21 +106,20 @@ def process_shifts(path_to_csv):
                 if start_break_hour <= hour < end_break_hour: # skip adding to dictionary
                     if hour == start_break_hour and start_break_minute != 0: # unless additional minutes start
                         print("Added {} to dict".format(hour))
-                        shift_hours.update({hour : hourly_cost + current_pay_rate * (start_break_minute / 60)})
+                        shifts.update({str_hour : hourly_cost + current_pay_rate * (start_break_minute / 60)})
                     else: # skip the break
                         print("Skipping break-hour: {}".format(hour))
                 elif hour == end_break_hour and end_break_minute != 0: # unless additional minutes end
                     print("Added {} to dict".format(hour))
-                    shift_hours.update({hour : hourly_cost + current_pay_rate * (abs(end_break_minute - 60) / 60)})
+                    shifts.update({str_hour : hourly_cost + current_pay_rate * (abs(end_break_minute - 60) / 60)})
                 elif hour == end_hour and end_minute != 0:
-                    import ipdb; ipdb.set_trace(context=11)
                     print("Added {} to dict".format(hour))
-                    shift_hours.update({hour : hourly_cost + current_pay_rate * (end_minute / 60)})
+                    shifts.update({str_hour : hourly_cost + current_pay_rate * (end_minute / 60)})
                 else:
                     print("Added {} to dict".format(hour))
-                    shift_hours.update({hour : hourly_cost + current_pay_rate})
+                    shifts.update({str_hour : hourly_cost + current_pay_rate})
 
-    import ipdb; ipdb.set_trace(context=11)
+    return shifts
 
 
 def process_sales(path_to_csv):
@@ -140,7 +141,23 @@ def process_sales(path_to_csv):
 
     :rtype dict:
     """
-    return
+
+    sales = dict()
+
+    # for each row in file
+    with open(path_to_csv, newline='') as csvfile:
+        reader = csv.reader(csvfile, delimiter=',')
+        reader.__next__() # skip header
+
+        for transaction in reader:
+            hour = transaction[1][:2] + ':00' if int(transaction[1][:2]) > 9 else '0' + transaction[1][:2] + ':00'
+            amount = float(transaction[0])
+            total_sale = 0
+            if hour in sales:
+                total_sale = sales[hour]
+            sales.update({hour : total_sale + amount})
+
+    return sales
 
 def compute_percentage(shifts, sales):
     """
@@ -159,6 +176,12 @@ def compute_percentage(shifts, sales):
     }
     :rtype: dict
     """
+
+    import ipdb; ipdb.set_trace()
+
+    for value in variable:
+        pass
+
     return
 
 def best_and_worst_hour(percentages):
@@ -172,6 +195,8 @@ def best_and_worst_hour(percentages):
     e.g. ["18:00", "20:00"]
 
     """
+
+
 
     return
 
