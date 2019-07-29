@@ -93,7 +93,7 @@ def process_shifts(path_to_csv):
 
             print('work: {}:{}-{}:{}\tbreak: {}:{}-{}:{}\trate: {}'.format(start_hour, start_minute, end_hour, end_minute, start_break_hour, start_break_minute, end_break_hour, end_break_minute, current_pay_rate))
 
-            for hour in range(start_hour, end_hour):
+            for hour in range(start_hour, end_hour+1 if end_minute != 0 else end_hour):
 
                 if hour in shift_hours:
                     hourly_cost = shift_hours[hour] # get hourly_cost
@@ -101,20 +101,24 @@ def process_shifts(path_to_csv):
                     hourly_cost = 0
 
                 # add values to dictionary
-                import ipdb; ipdb.set_trace(context=11)
                 if start_break_hour <= hour < end_break_hour: # skip adding to dictionary
                     if hour == start_break_hour and start_break_minute != 0: # unless additional minutes start
+                        print("Added {} to dict".format(hour))
                         shift_hours.update({hour : hourly_cost + current_pay_rate * (start_break_minute / 60)})
-                    elif hour == end_break_hour and end_break_minute != 0: # unless additional minutes end
-                        shift_hours.update({hour : hourly_cost + current_pay_rate * (abs(end_break_minute - 60) / 60)})
                     else: # skip the break
                         print("Skipping break-hour: {}".format(hour))
+                elif hour == end_break_hour and end_break_minute != 0: # unless additional minutes end
+                    print("Added {} to dict".format(hour))
+                    shift_hours.update({hour : hourly_cost + current_pay_rate * (abs(end_break_minute - 60) / 60)})
+                elif hour == end_hour and end_minute != 0:
+                    import ipdb; ipdb.set_trace(context=11)
+                    print("Added {} to dict".format(hour))
+                    shift_hours.update({hour : hourly_cost + current_pay_rate * (end_minute / 60)})
                 else:
+                    print("Added {} to dict".format(hour))
                     shift_hours.update({hour : hourly_cost + current_pay_rate})
 
     import ipdb; ipdb.set_trace(context=11)
-
-
 
 
 def process_sales(path_to_csv):
