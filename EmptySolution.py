@@ -4,6 +4,7 @@ Please write you name here: Jostein Dyrseth
 import csv
 import datetime
 import sys
+import pprint
 
 
 def convert_to_24(time_value, type):
@@ -176,13 +177,18 @@ def compute_percentage(shifts, sales):
     }
     :rtype: dict
     """
+    percentage_dict = dict()
+    for time in sorted(shifts):
+        cost = shifts[time]
+        try:
+            sale = sales[time]
+            percentage = cost / sale
+        except:
+            sale = None
+            percentage = cost * (-1)
+        percentage_dict.update({time : percentage})
 
-    import ipdb; ipdb.set_trace()
-
-    for value in variable:
-        pass
-
-    return
+    return percentage_dict
 
 def best_and_worst_hour(percentages):
     """
@@ -196,9 +202,27 @@ def best_and_worst_hour(percentages):
 
     """
 
+    # import ipdb; ipdb.set_trace(context=11)
 
+    best_to_worst_hours = []
 
-    return
+    index = 0
+    for value in sorted(percentages.values()):
+        if value < 0:
+            best_to_worst_hours.append(value)
+            index += 1
+        else: # positive value
+            # import ipdb; ipdb.set_trace()
+            best_to_worst_hours.insert(index, value)
+
+    best_to_worst_hours = [value for value in reversed(best_to_worst_hours)]
+    print(best_to_worst_hours)
+    print(best_to_worst_hours[0], best_to_worst_hours[-1])
+
+    import ipdb; ipdb.set_trace(context=11)
+
+    # assuming to return a float for both best_hour, worst_hour (from the list) - and not the list itself as the main function expects two values. However the list is prepared if need be.
+    return best_to_worst_hours[0], best_to_worst_hours[-1]
 
 def main(path_to_shifts, path_to_sales):
     """
