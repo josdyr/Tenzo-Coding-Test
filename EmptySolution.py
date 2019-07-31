@@ -34,11 +34,13 @@ def get_hour_minute(break_time):
         try:
             break_hour, break_minute = break_time.split(".")
         except Exception as e:
-            print("Could not split on '.'", file=sys.stderr)
+            # print("Could not split on '.'", file=sys.stderr)
+            pass
         try:
             break_hour, break_minute = break_time.split(":")
         except Exception as e:
-            print("Could not split on ':'", file=sys.stderr)
+            # print("Could not split on ':'", file=sys.stderr)
+            pass
     else:
         break_hour = break_time
         break_minute = None
@@ -93,7 +95,7 @@ def process_shifts(path_to_csv):
             # pay rate
             current_pay_rate = float(shift[2])
 
-            print('work: {}:{}-{}:{}\tbreak: {}:{}-{}:{}\trate: {}'.format(start_hour, start_minute, end_hour, end_minute, start_break_hour, start_break_minute, end_break_hour, end_break_minute, current_pay_rate))
+            # print('work: {}:{}-{}:{}\tbreak: {}:{}-{}:{}\trate: {}'.format(start_hour, start_minute, end_hour, end_minute, start_break_hour, start_break_minute, end_break_hour, end_break_minute, current_pay_rate))
 
             for hour in range(start_hour, end_hour+1 if end_minute != 0 else end_hour):
 
@@ -106,18 +108,19 @@ def process_shifts(path_to_csv):
                 # add values to dictionary
                 if start_break_hour <= hour < end_break_hour: # skip adding to dictionary
                     if hour == start_break_hour and start_break_minute != 0: # unless additional minutes start
-                        print("Added {} to dict".format(hour))
+                        # print("Added {} to dict".format(hour))
                         shifts.update({str_hour : hourly_cost + current_pay_rate * (start_break_minute / 60)})
                     else: # skip the break
-                        print("Skipping break-hour: {}".format(hour))
+                        # print("Skipping break-hour: {}".format(hour))
+                        pass
                 elif hour == end_break_hour and end_break_minute != 0: # unless additional minutes end
-                    print("Added {} to dict".format(hour))
+                    # print("Added {} to dict".format(hour))
                     shifts.update({str_hour : hourly_cost + current_pay_rate * (abs(end_break_minute - 60) / 60)})
                 elif hour == end_hour and end_minute != 0:
-                    print("Added {} to dict".format(hour))
+                    # print("Added {} to dict".format(hour))
                     shifts.update({str_hour : hourly_cost + current_pay_rate * (end_minute / 60)})
                 else:
-                    print("Added {} to dict".format(hour))
+                    # print("Added {} to dict".format(hour))
                     shifts.update({str_hour : hourly_cost + current_pay_rate})
 
     return shifts
@@ -216,8 +219,8 @@ def best_and_worst_hour(percentages):
             best_to_worst_hours.insert(index, value)
 
     best_to_worst_hours = [value for value in reversed(best_to_worst_hours)]
-    print(best_to_worst_hours)
-    print(best_to_worst_hours[0], best_to_worst_hours[-1])
+    # print(best_to_worst_hours)
+    # print(best_to_worst_hours[0], best_to_worst_hours[-1])
 
     import ipdb; ipdb.set_trace(context=11)
 
@@ -244,3 +247,5 @@ if __name__ == '__main__':
 
 
 # Please write you name here: Jostein Dyrseth
+
+# I wanted to do TDD if I had more time. This would allow me to test my own code which would be very benefitial.
